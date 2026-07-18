@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prime Factors & Base Representations</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f7fb;
+      --panel: rgba(255, 255, 255, 0.88);
+      --text: #172033;
+      --muted: #657089;
+      --line: #dbe2ee;
+      --accent: #3056d3;
+      --accent-strong: #2144b4;
+      --accent-soft: #e9efff;
+      --error: #b42318;
+      --shadow: 0 22px 70px rgba(33, 49, 84, 0.12);
+      --radius: 22px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1420;
+        --panel: rgba(24, 31, 47, 0.9);
+        --text: #eef2ff;
+        --muted: #aab4cc;
+        --line: #364056;
+        --accent: #8ea6ff;
+        --accent-strong: #b5c2ff;
+        --accent-soft: #242e50;
+        --error: #ff9b8f;
+        --shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(48, 86, 211, 0.14), transparent 33rem),
+        radial-gradient(circle at 90% 90%, rgba(114, 64, 214, 0.12), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1100px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 56px 0 72px;
+    }
+
+    header { margin-bottom: 28px; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--accent-strong);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(2.2rem, 6vw, 4.9rem);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.65;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .input-panel { padding: clamp(20px, 4vw, 34px); }
+
+    form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 9px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      padding: 16px 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      outline: none;
+      background: color-mix(in srgb, var(--panel) 86%, transparent);
+      color: var(--text);
+      font: 600 1.05rem/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 750;
+    }
+
+    .primary {
+      min-height: 53px;
+      padding: 0 22px;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    .primary:hover { background: var(--accent-strong); transform: translateY(-1px); }
+    .primary:disabled { opacity: 0.58; cursor: wait; transform: none; }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .example {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .example:hover { border-color: var(--accent); color: var(--accent-strong); }
+
+    #message {
+      min-height: 1.5em;
+      margin: 12px 2px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    #message.error { color: var(--error); }
+
+    .results {
+      display: grid;
+      grid-template-columns: minmax(250px, 0.78fr) minmax(0, 1.5fr);
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .factor-card {
+      padding: 26px;
+      align-self: start;
+      position: sticky;
+      top: 20px;
+    }
+
+    .section-label {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .decimal-value {
+      overflow-wrap: anywhere;
+      margin: 0 0 24px;
+      color: var(--muted);
+      font: 600 0.95rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .factorization {
+      overflow-wrap: anywhere;
+      margin: 0;
+      font: 750 clamp(1.42rem, 3vw, 2.25rem)/1.42 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      letter-spacing: -0.03em;
+    }
+
+    .factor-note {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
+    .table-panel { overflow: hidden; }
+
+    .table-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      padding: 24px 26px 17px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .table-heading h2 { margin: 0; font-size: 1.24rem; letter-spacing: -0.02em; }
+    .table-heading p { margin: 5px 0 0; color: var(--muted); font-size: 0.85rem; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 15px 26px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: color-mix(in srgb, var(--accent-soft) 42%, transparent); }
+
+    .base-name {
+      width: 108px;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .representation {
+      overflow-wrap: anywhere;
+      font: 650 0.95rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .copy {
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .copy:hover { color: var(--accent-strong); border-color: var(--accent); }
+
+    .hidden { display: none; }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      main { padding-top: 34px; }
+      form { grid-template-columns: 1fr; }
+      .primary { width: 100%; }
+      .results { grid-template-columns: 1fr; }
+      .factor-card { position: static; }
+      th, td { padding-inline: 18px; }
+      .table-heading { padding-inline: 18px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Integer explorer</p>
+      <h1>Prime factors and base representations.</h1>
+      <p class="subtitle">Enter a positive decimal integer. The page factors it and converts it into bases 2, 3, 4, 6, 8, 9, 10, 12, 16, 20, 36, and 60 using arbitrary-precision arithmetic.</p>
+    </header>
+
+    <section class="panel input-panel" aria-labelledby="input-title">
+      <form id="number-form" novalidate>
+        <label for="number-input">
+          <span id="input-title">Positive integer in decimal</span>
+          <input id="number-input" name="number" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="e.g. 3600" value="3600" aria-describedby="message">
+        </label>
+        <button class="primary" id="calculate-button" type="submit">Calculate</button>
+      </form>
+      <div class="examples" aria-label="Example values">
+        <button class="example" type="button" data-value="3600">3600</button>
+        <button class="example" type="button" data-value="1234567890">1234567890</button>
+        <button class="example" type="button" data-value="9999999967">9999999967</button>
+      </div>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="results" class="results hidden" aria-live="polite">
+      <article class="panel factor-card">
+        <p class="section-label">Decimal integer</p>
+        <p id="decimal-value" class="decimal-value"></p>
+        <p class="section-label">Prime factorization</p>
+        <p id="factorization" class="factorization"></p>
+        <p id="factor-note" class="factor-note"></p>
+      </article>
+
+      <article class="panel table-panel">
+        <div class="table-heading">
+          <div>
+            <h2>Representations by base</h2>
+            <p>Letters follow the hexadecimal pattern: A = 10, B = 11, and so on.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Base</th>
+                <th scope="col">Representation</th>
+                <th scope="col"><span class="hidden">Copy</span></th>
+              </tr>
+            </thead>
+            <tbody id="base-table-body"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <footer>Base 60 uses two-digit decimal groups separated by colons, including the leading group; for example, decimal 3600 becomes 01:00:00.</footer>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const BASES = [2, 3, 4, 6, 8, 9, 10, 12, 16, 20, 36, 60];
+      const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const SMALL_PRIMES = [
+        2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n, 41n, 43n,
+        47n, 53n, 59n, 61n, 67n, 71n, 73n, 79n, 83n, 89n, 97n
+      ];
+      const MR_BASES = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n, 41n];
+
+      const form = document.getElementById('number-form');
+      const input = document.getElementById('number-input');
+      const calculateButton = document.getElementById('calculate-button');
+      const message = document.getElementById('message');
+      const results = document.getElementById('results');
+      const decimalValue = document.getElementById('decimal-value');
+      const factorizationOutput = document.getElementById('factorization');
+      const factorNote = document.getElementById('factor-note');
+      const tableBody = document.getElementById('base-table-body');
+
+      let runId = 0;
+
+      function setMessage(text, isError = false) {
+        message.textContent = text;
+        message.classList.toggle('error', isError);
+      }
+
+      function gcd(a, b) {
+        while (b !== 0n) {
+          [a, b] = [b, a % b];
+        }
+        return a < 0n ? -a : a;
+      }
+
+      function modPow(base, exponent, modulus) {
+        let result = 1n;
+        base %= modulus;
+        while (exponent > 0n) {
+          if (exponent & 1n) result = (result * base) % modulus;
+          exponent >>= 1n;
+          base = (base * base) % modulus;
+        }
+        return result;
+      }
+
+      function isProbablePrime(n) {
+        if (n < 2n) return false;
+        for (const p of SMALL_PRIMES) {
+          if (n === p) return true;
+          if (n % p === 0n) return false;
+        }
+
+        let d = n - 1n;
+        let s = 0;
+        while ((d & 1n) === 0n) {
+          d >>= 1n;
+          s++;
+        }
+
+        for (const a of MR_BASES) {
+          if (a >= n - 1n) continue;
+          let x = modPow(a, d, n);
+          if (x === 1n || x === n - 1n) continue;
+
+          let composite = true;
+          for (let r = 1; r < s; r++) {
+            x = (x * x) % n;
+            if (x === n - 1n) {
+              composite = false;
+              break;
+            }
+          }
+          if (composite) return false;
+        }
+        return true;
+      }
+
+      function randomBigIntBelow(limit) {
+        if (limit <= 1n) return 0n;
+        const bitLength = limit.toString(2).length;
+        const wordCount = Math.ceil(bitLength / 32);
+        const words = new Uint32Array(wordCount);
+        let value;
+        do {
+          crypto.getRandomValues(words);
+          value = 0n;
+          for (const word of words) value = (value << 32n) | BigInt(word);
+        } while (value >= limit);
+        return value;
+      }
+
+      function nextFrame() {
+        return new Promise(resolve => setTimeout(resolve, 0));
+      }
+
+      async function pollardRho(n, activeRun) {
+        if (n % 2n === 0n) return 2n;
+        if (n % 3n === 0n) return 3n;
+
+        while (true) {
+          if (activeRun !== runId) throw new Error('cancelled');
+          const c = randomBigIntBelow(n - 1n) + 1n;
+          let x = randomBigIntBelow(n - 2n) + 2n;
+          let y = x;
+          let divisor = 1n;
+          let iterations = 0;
+
+          while (divisor === 1n) {
+            x = (x * x + c) % n;
+            y = (y * y + c) % n;
+            y = (y * y + c) % n;
+            divisor = gcd(x > y ? x - y : y - x, n);
+            iterations++;
+
+            if ((iterations & 4095) === 0) {
+              if (activeRun !== runId) throw new Error('cancelled');
+              await nextFrame();
+            }
+          }
+
+          if (divisor !== n) return divisor;
+        }
+      }
+
+      async function factorInteger(n, activeRun) {
+        const factors = [];
+
+        for (const p of SMALL_PRIMES) {
+          while (n % p === 0n) {
+            factors.push(p);
+            n /= p;
+          }
+        }
+
+        async function split(value) {
+          if (activeRun !== runId) throw new Error('cancelled');
+          if (value === 1n) return;
+          if (isProbablePrime(value)) {
+            factors.push(value);
+            return;
+          }
+          const divisor = await pollardRho(value, activeRun);
+          await split(divisor);
+          await split(value / divisor);
+        }
+
+        await split(n);
+        factors.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+        return factors;
+      }
+
+      function toBase(n, base) {
+        if (base === 60) {
+          if (n === 0n) return '00';
+          const groups = [];
+          while (n > 0n) {
+            groups.push((n % 60n).toString().padStart(2, '0'));
+            n /= 60n;
+          }
+          return groups.reverse().join(':');
+        }
+
+        if (n === 0n) return '0';
+        const radix = BigInt(base);
+        let output = '';
+        while (n > 0n) {
+          output = DIGITS[Number(n % radix)] + output;
+          n /= radix;
+        }
+        return output;
+      }
+
+      function formatFactorization(factors) {
+        if (factors.length === 0) return 'No prime factors';
+        const groups = [];
+        for (const factor of factors) {
+          const last = groups.at(-1);
+          if (last && last.factor === factor) last.count++;
+          else groups.push({ factor, count: 1 });
+        }
+        return groups.map(({ factor, count }) =>
+          count === 1 ? factor.toString() : `${factor.toString()}^${count}`
+        ).join(' × ');
+      }
+
+      function renderTable(n) {
+        tableBody.replaceChildren();
+        for (const base of BASES) {
+          const representation = toBase(n, base);
+          const row = document.createElement('tr');
+
+          const baseCell = document.createElement('td');
+          baseCell.className = 'base-name';
+          baseCell.textContent = `Base ${base}`;
+
+          const valueCell = document.createElement('td');
+          valueCell.className = 'representation';
+          valueCell.textContent = representation;
+
+          const copyCell = document.createElement('td');
+          const copyButton = document.createElement('button');
+          copyButton.className = 'copy';
+          copyButton.type = 'button';
+          copyButton.textContent = 'Copy';
+          copyButton.setAttribute('aria-label', `Copy base ${base} representation`);
+          copyButton.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(representation);
+              copyButton.textContent = 'Copied';
+              setTimeout(() => { copyButton.textContent = 'Copy'; }, 1100);
+            } catch {
+              copyButton.textContent = 'Select';
+              const range = document.createRange();
+              range.selectNodeContents(valueCell);
+              const selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          });
+
+          copyCell.append(copyButton);
+          row.append(baseCell, valueCell, copyCell);
+          tableBody.append(row);
+        }
+      }
+
+      async function calculate() {
+        const raw = input.value.trim();
+        if (!/^\d+$/.test(raw)) {
+          results.classList.add('hidden');
+          setMessage('Enter a positive integer using decimal digits only.', true);
+          input.focus();
+          return;
+        }
+
+        const n = BigInt(raw);
+        if (n <= 0n) {
+          results.classList.add('hidden');
+          setMessage('The integer must be greater than zero.', true);
+          input.focus();
+          return;
+        }
+
+        const activeRun = ++runId;
+        calculateButton.disabled = true;
+        calculateButton.textContent = 'Factoring…';
+        setMessage('Converting bases and finding prime factors…');
+
+        const normalized = n.toString();
+        decimalValue.textContent = normalized;
+        renderTable(n);
+        results.classList.remove('hidden');
+        factorizationOutput.textContent = 'Working…';
+        factorNote.textContent = '';
+
+        try {
+          if (n === 1n) {
+            factorizationOutput.textContent = 'No prime factors';
+            factorNote.textContent = '1 is neither prime nor composite.';
+          } else {
+            await nextFrame();
+            const factors = await factorInteger(n, activeRun);
+            if (activeRun !== runId) return;
+            factorizationOutput.textContent = formatFactorization(factors);
+            factorNote.textContent = factors.length === 1
+              ? 'This integer is prime.'
+              : `${factors.length} prime factor${factors.length === 1 ? '' : 's'} counted with multiplicity.`;
+          }
+          setMessage('Calculation complete.');
+        } catch (error) {
+          if (error.message !== 'cancelled') {
+            factorizationOutput.textContent = 'Could not complete factorization';
+            factorNote.textContent = 'Very large difficult composites may take substantial computation in a browser.';
+            setMessage('Base conversions are shown, but factorization did not complete.', true);
+          }
+        } finally {
+          if (activeRun === runId) {
+            calculateButton.disabled = false;
+            calculateButton.textContent = 'Calculate';
+          }
+        }
+      }
+
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        calculate();
+      });
+
+      document.querySelectorAll('.example').forEach(button => {
+        button.addEventListener('click', () => {
+          input.value = button.dataset.value;
+          calculate();
+        });
+      });
+
+      calculate();
+    })();
+  </script>
+</body>
+</html>
