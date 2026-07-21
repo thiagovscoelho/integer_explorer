@@ -284,13 +284,99 @@
 
     .hidden { display: none; }
 
-    footer {
-      margin-top: 18px;
+    .info-panel {
+      margin-top: 22px;
+      overflow: hidden;
+    }
+
+    .info-panel summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px 24px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+
+    .info-panel summary::-webkit-details-marker { display: none; }
+
+    .info-panel summary:hover {
+      background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
+    }
+
+    .info-panel summary span:first-child {
+      display: grid;
+      gap: 4px;
+    }
+
+    .info-panel summary strong {
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .info-panel summary small {
       color: var(--muted);
       font-size: 0.8rem;
-      line-height: 1.55;
-      text-align: center;
+      font-weight: 600;
     }
+
+    .summary-marker {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--accent-strong);
+      font-size: 1.25rem;
+      line-height: 1;
+      transition: transform 150ms ease;
+    }
+
+    .info-panel[open] .summary-marker { transform: rotate(45deg); }
+
+    .info-content {
+      padding: 0 24px 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    .info-content > p:first-child { margin-top: 20px; }
+
+    code {
+      padding: 0.08em 0.34em;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+      color: var(--text);
+      font: 650 0.9em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .notation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .notation-grid > div {
+      display: grid;
+      gap: 3px;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--panel) 82%, transparent);
+    }
+
+    .notation-grid strong { color: var(--text); }
+    .notation-grid span { font-size: 0.8rem; }
+    .info-example { margin-bottom: 0; }
+
 
     @media (max-width: 760px) {
       main { padding-top: 34px; }
@@ -300,6 +386,8 @@
       .factor-card { position: static; }
       th, td { padding-inline: 18px; }
       .table-heading { padding-inline: 18px; }
+      .notation-grid { grid-template-columns: 1fr; }
+      .info-panel summary, .info-content { padding-inline: 18px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -312,7 +400,7 @@
     <header>
       <p class="eyebrow">Integer explorer</p>
       <h1>Prime factors and base representations.</h1>
-      <p class="subtitle">Enter a positive decimal integer. The page factors it and converts it into bases 2, 3, 4, 6, 8, 9, 10, 12, 16, 20, 36, and 60 using arbitrary-precision arithmetic.</p>
+      <p class="subtitle">Enter a positive decimal integer. The page factors it and converts it into standard positional notations plus colon-grouped bases from 60 through 1296, using arbitrary-precision arithmetic.</p>
     </header>
 
     <section class="panel input-panel" aria-labelledby="input-title">
@@ -344,7 +432,7 @@
         <div class="table-heading">
           <div>
             <h2>Representations by base</h2>
-            <p>Letters follow the hexadecimal pattern: A = 10, B = 11, and so on.</p>
+            <p>Standard bases use 0–9 and A–Z; grouped bases use fixed two-character digits separated by colons.</p>
           </div>
         </div>
         <div class="table-wrap">
@@ -362,14 +450,51 @@
       </article>
     </section>
 
-    <footer>Base 60 uses two-digit decimal groups separated by colons, including the leading group; for example, decimal 3600 becomes 01:00:00.</footer>
+    <details class="panel info-panel">
+      <summary>
+        <span>
+          <strong>Notation guide</strong>
+          <small>How letters and colon-grouped digits work</small>
+        </span>
+        <span class="summary-marker" aria-hidden="true">+</span>
+      </summary>
+      <div class="info-content">
+        <p>In ordinary bases up to 36, digits follow the familiar hexadecimal-style sequence: <code>0</code>–<code>9</code>, then <code>A = 10</code>, <code>B = 11</code>, through <code>Z = 35</code>.</p>
+        <p>For the larger bases, each digit of the outer base is displayed as a fixed two-character group. Groups are separated by colons, and the leading group is padded too. Thus, in any grouped base <em>b</em>, decimal <em>b</em> is written <code>01:00</code>, and decimal <em>b²</em> is written <code>01:00:00</code>.</p>
+        <div class="notation-grid" role="list">
+          <div role="listitem"><strong>Base 60</strong><span>decimal pairs <code>00</code>–<code>59</code></span></div>
+          <div role="listitem"><strong>Base 64</strong><span>octal pairs <code>00</code>–<code>77</code></span></div>
+          <div role="listitem"><strong>Base 100</strong><span>decimal pairs <code>00</code>–<code>99</code></span></div>
+          <div role="listitem"><strong>Base 120</strong><span>mixed decimal/dozenal pairs <code>00</code>–<code>9B</code></span></div>
+          <div role="listitem"><strong>Base 144</strong><span>dozenal pairs <code>00</code>–<code>BB</code></span></div>
+          <div role="listitem"><strong>Base 256</strong><span>hexadecimal pairs <code>00</code>–<code>FF</code></span></div>
+          <div role="listitem"><strong>Base 360</strong><span>mixed decimal/base-36 pairs <code>00</code>–<code>9Z</code></span></div>
+          <div role="listitem"><strong>Base 400</strong><span>vigesimal pairs <code>00</code>–<code>JJ</code></span></div>
+          <div role="listitem"><strong>Base 1296</strong><span>base-36 pairs <code>00</code>–<code>ZZ</code></span></div>
+        </div>
+        <p class="info-example">Examples: decimal 3600 is <code>01:00:00</code> in base 60; decimal 119 is <code>9B</code> in base 120; decimal 359 is <code>9Z</code> in base 360; and decimal 1295 is <code>ZZ</code> in base 1296.</p>
+      </div>
+    </details>
   </main>
 
   <script>
     (() => {
       'use strict';
 
-      const BASES = [2, 3, 4, 6, 8, 9, 10, 12, 16, 20, 36, 60];
+      const BASES = [
+        { base: 2 }, { base: 3 }, { base: 4 }, { base: 6 }, { base: 8 },
+        { base: 9 }, { base: 10 }, { base: 12 }, { base: 16 }, { base: 20 },
+        { base: 36 },
+        { base: 60, grouped: true, lowRadix: 10 },
+        { base: 64, grouped: true, lowRadix: 8 },
+        { base: 100, grouped: true, lowRadix: 10 },
+        { base: 120, grouped: true, lowRadix: 12 },
+        { base: 144, grouped: true, lowRadix: 12 },
+        { base: 256, grouped: true, lowRadix: 16 },
+        { base: 360, grouped: true, lowRadix: 36 },
+        { base: 400, grouped: true, lowRadix: 20 },
+        { base: 1296, grouped: true, lowRadix: 36 }
+      ];
       const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const SMALL_PRIMES = [
         2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n, 41n, 43n,
@@ -518,13 +643,22 @@
         return factors;
       }
 
-      function toBase(n, base) {
-        if (base === 60) {
+      function encodeGroupedDigit(value, lowRadix) {
+        const high = Math.floor(value / lowRadix);
+        const low = value % lowRadix;
+        return DIGITS[high] + DIGITS[low];
+      }
+
+      function toBase(n, spec) {
+        const { base, grouped = false, lowRadix } = spec;
+
+        if (grouped) {
           if (n === 0n) return '00';
+          const radix = BigInt(base);
           const groups = [];
           while (n > 0n) {
-            groups.push((n % 60n).toString().padStart(2, '0'));
-            n /= 60n;
+            groups.push(encodeGroupedDigit(Number(n % radix), lowRadix));
+            n /= radix;
           }
           return groups.reverse().join(':');
         }
@@ -554,13 +688,13 @@
 
       function renderTable(n) {
         tableBody.replaceChildren();
-        for (const base of BASES) {
-          const representation = toBase(n, base);
+        for (const spec of BASES) {
+          const representation = toBase(n, spec);
           const row = document.createElement('tr');
 
           const baseCell = document.createElement('td');
           baseCell.className = 'base-name';
-          baseCell.textContent = `Base ${base}`;
+          baseCell.textContent = `Base ${spec.base}`;
 
           const valueCell = document.createElement('td');
           valueCell.className = 'representation';
@@ -571,7 +705,7 @@
           copyButton.className = 'copy';
           copyButton.type = 'button';
           copyButton.textContent = 'Copy';
-          copyButton.setAttribute('aria-label', `Copy base ${base} representation`);
+          copyButton.setAttribute('aria-label', `Copy base ${spec.base} representation`);
           copyButton.addEventListener('click', async () => {
             try {
               await navigator.clipboard.writeText(representation);
